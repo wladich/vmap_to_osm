@@ -58,7 +58,6 @@ def area(sql, tags, label_tag=None):
         if len(coords) == 1:
             osm.add_way(coords[0], area_tags)
         else:
-            area_tags.append(('type', 'multiplolygon'))
             osm.add_ways_relation(coords, area_tags)
     
 def poi(sql, tags, label_tag=None):
@@ -83,53 +82,53 @@ def poi(sql, tags, label_tag=None):
 
     
 def roads():
-    ##автомагистраль
+    ##0x100001 автомагистраль
     way("SELECT geom, label FROM lines WHERE type='0x100001'", 'road=highway', 'name')
-    #крупное шоссе
+    #0x10000b крупное шоссе
     way("SELECT geom, label FROM lines WHERE type='0x10000b'",  "road=major", 'name')
-    #шоссе
+    #0x100002 шоссе
     way("SELECT geom, label FROM lines WHERE type='0x100002'",  "road=asphalt", 'name')
-    #просека широкая
+    #0x10001a просека широкая
     way("SELECT geom, label FROM lines WHERE type='0x10001c'",  "road=cutting_wide", 'name')
     for proh in 0, 2, 3, 4, 5:
         if proh == 0:
             proh_tag = ""
         else:
             proh_tag = ";passability=%s" % proh
-        #проезжий грейдер
+        #0x100004 проезжий грейдер
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x100004'" % proh,  "road=advanced; drive=yes%s" % proh_tag, 'name')
-        #непроезжий грейдер
+        #0x100007 непроезжий грейдер
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x100007'" % proh,  "road=advanced%s" % proh_tag, 'name')
-        #проезжая грунтовка
+        #0x100006 проезжая грунтовка
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x100006'" % proh,  "road=dirt; drive=yes%s" % proh_tag, 'name')   
-        #непроезжая грунтовка
+        #0x10000a непроезжая грунтовка
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x10000a'" % proh,  "road=dirt%s" % proh_tag, 'name')
-        #просека
+        #0x100016 просека
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x100016'" % proh,  "road=cutting%s" % proh_tag, 'name')
-        #заросшая дорога
+        #0x10002d заросшая дорога
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x10002d'" % proh,  "road=abandoned%s" % proh_tag, 'name')
-        #тропа
+        #0x10002a тропа
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x10002a'" % proh,  "road=path%s" % proh_tag, 'name')
-        #сухая канава
+        #0x10002b сухая канава
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x10002b'" % proh,  "road=trench%s" % proh_tag, 'name')
-        #вал
+        #0x10002c вал
         way("SELECT geom, label FROM proh%s_lines WHERE type='0x10002c'" % proh,  "road=wall%s" % proh_tag, 'name')
-    #железная дорога
+    #0x100027 железная дорога
     #0x10000d	мал.хребет -- используется для не магистральных железных дорог
     way("SELECT geom, label FROM lines WHERE type in ('0x100027', '0x10000d')",  "road=railway", 'name')
-    #газопровод
+    #0x100028 газопровод
     way("SELECT geom, label FROM lines WHERE type='0x100028'",  "road=gasline", 'name')
-    #лэп
+    #0x100029 лэп
     way("SELECT geom, label FROM lines WHERE type='0x100029'",  "road=powerline_major", 'name')
-    #маленькая лэп
+    #0x10001a маленькая лэп
     way("SELECT geom, label FROM lines WHERE type='0x10001a'",  "road=powerline", 'name')    
 
 def points():
     #0x700 "город"
-    poi("SELECT geom, label FROM points WHERE type='0x700'", 'poi=town', 'elevation')
+    poi("SELECT geom, label FROM points WHERE type='0x700'", 'poi=town', 'name')
     #0x800 "село"
     #0x900 "деревня"
-    poi("SELECT geom, label FROM points WHERE type in ('0x800', '0x900')", 'poi=village', 'elevation')
+    poi("SELECT geom, label FROM points WHERE type in ('0x800', '0x900')", 'poi=village', 'name')
     #0xd00 "отметка высоты" -- не делаем
     #0xf00 "триангуляционный знак"
     poi("SELECT geom, label FROM points WHERE type='0xf00'", 'poi=trig', 'elevation')
@@ -181,24 +180,24 @@ def bridges():
     poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type in ('0x100009, 0x10000e')", 'poi=bridge; drive=yes')
 
 def rivers():
-    #река-1
+    #0x100015 река-1
     way("SELECT * FROM lines WHERE type='0x100015'",  "river=stream", 'name')
-    #река-2
+    #0x100015 река-2
     way("SELECT * FROM lines WHERE type='0x100018'",  "river=kneedeep", 'name')
-    #река-3
+    #0x100015 река-3
     way("SELECT * FROM lines WHERE type='0x10001f'",  "river=wide", 'name')
-    #пунктирный ручей
+    #0x100026 пунктирный ручей
     way("SELECT * FROM lines WHERE type='0x100026'",  "river=drying", 'name')
 
 def relief():
-    #пунктирная горизонталь
+    #0x100020 пунктирная горизонталь
     way("SELECT * FROM lines WHERE type='0x100020' AND ST_NPoints(geom)>2",  "relief=contour; deprecated:contour-width=minor", 'elevation')
-    #горизонтали, бергштрихи
+    #0x100021 горизонтали, бергштрихи
     way("SELECT * FROM lines WHERE type='0x100021' AND ST_NPoints(geom)>2",  "relief=contour", 'elevation')
-    #жирная горизонталь
+    #0x100022 жирная горизонталь
     way("SELECT * FROM lines WHERE type='0x100022' AND ST_NPoints(geom)>2",  "relief=contour; deprecated:contour-width=major", 'elevation')
     #### Бергштрихи    
-    way("SELECT * FROM lines WHERE type in ('0x100020', '0x100020') AND ST_NPoints(geom)=2",  "relief=hatch")
+    way("SELECT * FROM lines WHERE type='0x100021' AND ST_NPoints(geom)=2",  "relief=hatch")
     way("SELECT * FROM lines WHERE type='0x100022' AND ST_NPoints(geom)=2",  "relief=hatch; deprecated:contour-width=major")
     #0x10001e	низ обрыва -- не делаем
     #0x100003	верх обрыва
@@ -227,32 +226,30 @@ def swamps():
         """, 'swamp=swamp; converted_from_lines=yes')
 
 
-
-
 def landcover():
-    #водоемы
-    #большие водоемы
-    #остров
+    #0x200029 водоемы
+    #0x20003b большие водоемы
+    #0x200053 остров
     area("SELECT geom, label FROM polygons3 WHERE type in ('0x20003b', '0x200029')", 'landcover=water', 'name')
-    #городская застройка
+    #0x200001 городская застройка
     area("SELECT geom, label FROM polygons3 WHERE type = '0x200001'", 'landcover=urban')
-    #сельская застройка
+    #0x20000e сельская застройка
     area("SELECT geom, label FROM polygons3 WHERE type = '0x20000e'", 'landcover=rural')
-    #дачи
+    #0x20004e дачи
     area("SELECT geom, label FROM polygons3 WHERE type = '0x20004e'", 'landcover=cottage', 'name')    
-    #закрытые территории
+    #0x200004 закрытые территории
     area("SELECT geom, label FROM polygons3 WHERE type = '0x200004'", 'landcover=restricted', 'name')
-    #кладбище
+    #0x20001a кладбище
     area("SELECT geom, label FROM polygons3 WHERE type = '0x20001a'", 'landcover=cemetry')
-    #лес
-    #остров леса
-    #поле
+    #0x200016 лес
+    #0x200015 остров леса
+    #0x200052 поле
     area("SELECT geom, label FROM polygons3 WHERE type in ('0x200016', '0x200015')", 'landcover=forest')
-    #редколесье
+    #0x200014 редколесье
     area("SELECT geom, label FROM polygons3 WHERE type = '0x200014'", 'landcover=sparse')
-    #свежая вырубка
+    #0x20004f свежая вырубка
     area("SELECT geom, label FROM polygons3 WHERE type = '0x20004f'", 'landcover=felling')
-    #стар.вырубка
+    #0x200050 стар.вырубка
     area("SELECT geom, label FROM polygons3 WHERE type = '0x200050'", 'landcover=felling_overgrown')
 
 osm = osmapi.OSMDB(**dest_db)
