@@ -186,7 +186,7 @@ class OSMDB(object):
                 % (relation_id, way_id, role, n))
             self.execute("INSERT INTO relation_members (relation_id, member_type, member_id, member_role, sequence_id, version) VALUES (%s, 'Way', %s, '%s', %s, 1)"
                 % (relation_id, way_id, role, n))
-        relation_tags = [('type', 'multiploygon')]
+        relation_tags = [('type', 'multipolygon')]
 #        if tags:
         args = [(relation_id, k, v) for (k, v) in relation_tags]
         self.executemany('INSERT INTO current_relation_tags (relation_id, k, v) VALUES (%s, %s, %s)', args)
