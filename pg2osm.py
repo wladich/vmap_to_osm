@@ -145,11 +145,11 @@ def points():
     #0x2f08 "остановка автобуса"
     poi("SELECT geom, label FROM points WHERE type='0x2f08'", 'poi=bus_stop', 'name')
     #0x5905 "ж/д станция"
-    poi("SELECT geom, label FROM points WHERE type='5905'", 'poi=railway_station', 'name')
+    poi("SELECT geom, label FROM points WHERE type='0x5905'", 'poi=railway_station', 'name')
     #0x6402 "дом"
     poi("SELECT geom, label FROM points WHERE type='0x6402'", 'poi=building', 'name')
     #0x6403 "кладбище"
-    poi("SELECT geom, label FROM points WHERE type='6403'", 'poi=cemetry', 'name')
+    poi("SELECT geom, label FROM points WHERE type='0x6403'", 'poi=cemetry', 'name')
     #0x6406 "перевал" -- нет на карте
     #0x640c "шахта" -- 4 шт на карте в одном месте, не делаем
     #0x6411 "башня"
@@ -177,7 +177,7 @@ def bridges():
     poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type='0x100008'", 'poi=bridge')
     #0x100009	мост-2 (автомобильный) -- превращаем в точечный
     #0x10000e	мост-5 (на автомагистралях) -- превращаем в точечный
-    poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type in ('0x100009, 0x10000e')", 'poi=bridge; drive=yes')
+    poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type in ('0x100009', '0x10000e')", 'poi=bridge; drive=yes')
 
 def rivers():
     #0x100015 река-1
