@@ -10,10 +10,10 @@ drop table if exists polygons2_labels;
 create table polygons2_labels(geom geometry, type character varying(12), label character varying(64));
 insert into polygons2_labels(
 	select (st_dump(st_buffer(st_buffer(st_collect(geom), -0.00005, 'join=mitre'), 0.0001, 'join=mitre'))).geom as geom, type, label
-	from polygons2 where type in ('0x200004', '0x20004e', '0x200029', '0x20003b') GROUP BY type, label);
+	from polygons2 where type in ('0x200004', '0x20004e', '0x200029', '0x20003b', '0x20004c', '0x200051') GROUP BY type, label);
 insert into polygons2_labels(
 	select (st_dump(st_buffer(st_buffer(st_collect(geom), -0.00005, 'join=mitre'), 0.0001, 'join=mitre'))).geom as geom, type, null as label
-	from polygons2 where type not in ('0x200004', '0x20004e', '0x200029', '0x20003b') GROUP BY type, label);
+	from polygons2 where type not in ('0x200004', '0x20004e', '0x200029', '0x20003b', '0x20004c', '0x200051') GROUP BY type);
 CREATE INDEX polygons2_labels_label_idx ON polygons2_labels (label);
 CREATE INDEX polygons2_labels_type_idx ON polygons2_labels (type);
 CREATE INDEX polygons2_labels_geom_idx ON polygons2_labels USING gist (geom);
@@ -66,7 +66,7 @@ $$ LANGUAGE plpythonu;
 
 drop table temp_table;
 drop table combined_polygons;
-drop table polygons2_labels;
+--drop table polygons2_labels;
 
 ALTER TABLE polygons3 ADD COLUMN id SERIAL PRIMARY KEY;
 CREATE INDEX polygons3_geom_idx ON polygons3 USING gist (geom);

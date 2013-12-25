@@ -6,6 +6,7 @@ temp_dir="$basedir/_tmp"
 mkdir -p "$temp_dir"
 gitdir=$temp_dir/map_podm
 mif_base=$temp_dir/map_podm
+
 if [ -e "$gitdir" ]; then
     pushd "$gitdir"
     git pull
@@ -30,4 +31,5 @@ $pg -f "$basedir/basic.sql" > /dev/null
 $pg -f "$basedir/funcs.sql" > /dev/null
 $pg -f "$basedir/proh.sql" > /dev/null
 $pg -f "$basedir/landcover.sql" > /dev/null
+$pg -f "$basedir/swamps.sql" > /dev/null
 python $basedir/pg2osm.py
