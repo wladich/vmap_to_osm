@@ -257,7 +257,7 @@ pg = psycopg2.connect(**src_db)
 osm.truncate()
 
 osm.set_current_user('importer')
-changeset_id = osm.open_changeset([('created_by', 'me'), ('comment', 'Hi')])
+changeset_id = osm.open_changeset([('created_by', 'https://github.com/wladich/vmap_to_osm'), ('comment', 'Import of slazav map')])
 print 'Changeset %s' % changeset_id
 t = time.time()
 roads()
