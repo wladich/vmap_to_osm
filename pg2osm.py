@@ -213,7 +213,7 @@ def borders():
     #забор 0x100019
     way("SELECT * FROM lines WHERE type='0x100019'",  "border=fence", 'name')
     #контур леса 0x100023
-    way("SELECT * FROM lines WHERE type='0x100019'",  "border=forest", 'name')
+    way("SELECT * FROM lines WHERE type='0x100023'",  "border=forest", 'name')
     
 def swamps():
     #глубокое болото 0x20004c 
