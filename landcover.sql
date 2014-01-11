@@ -71,6 +71,8 @@ drop table combined_polygons;
 ALTER TABLE polygons3 ADD COLUMN id SERIAL PRIMARY KEY;
 CREATE INDEX polygons3_geom_idx ON polygons3 USING gist (geom);
 
+DELETE FROM polygons3 WHERE ST_Area(geom::geography) < 20*20;
+
 DROP TABLE IF EXISTS forests;
 SELECT limit_divide_polygon(geom) as geom INTO forests FROM polygons3 WHERE type in ('0x200016', '0x200015');
 

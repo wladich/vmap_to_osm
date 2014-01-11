@@ -40,3 +40,5 @@ INSERT INTO swamps2
 SELECT (ST_Dump(coalesce(ST_Difference(swamps.geom, ST_Collect(lakes.geom)), swamps.geom))).geom, swamps.label, swamps.kind 
     FROM swamps LEFT JOIN lakes ON swamps.geom && lakes.geom 
     GROUP BY swamps.geom, swamps.label, swamps.kind;
+
+DELETE FROM swamps2 WHERE ST_Area(geom::geography) < 20*20;
