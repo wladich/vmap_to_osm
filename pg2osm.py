@@ -7,6 +7,7 @@ import time
 
 src_db = dict(database='import_mappodm', user='postgres', host='127.0.0.1', port='5432')
 dest_db = dict(database='osm', user='postgres', host='127.0.0.1', port='5434')
+default_tags = [('source', 'import:map_podm')]
 
 def parse_tags(s):
     tags =  filter(None, (t.strip() for t in s.split(';')))
@@ -21,7 +22,7 @@ def float_to_coord(x):
     
 def way(sql, tags, label_tag=None):
     sql = 'SELECT ST_ASGEOJSON(ST_SimplifyPreserveTopology(t1.geom, 1e-6), 6), t1.label  FROM (%s) AS t1' % sql
-    tags = parse_tags(tags)
+    tags = default_tags + parse_tags(tags)
     cur = pg.cursor()
     cur.execute(sql)
     for geom, label in cur:
@@ -40,7 +41,7 @@ def way(sql, tags, label_tag=None):
 
 def area(sql, tags, label_tag=None):
     sql = 'SELECT ST_ASGEOJSON(t1.geom, 6), t1.label  FROM (%s) AS t1' % sql
-    tags = parse_tags(tags)
+    tags = default_tags + parse_tags(tags)
     cur = pg.cursor()
     cur.execute(sql)
     for geom, label in cur:
@@ -63,7 +64,7 @@ def area(sql, tags, label_tag=None):
 def poi(sql, tags, label_tag=None):
     osm.drop_node_cache()
     sql = 'SELECT DISTINCT ST_ASGEOJSON(t1.geom, 6), t1.label FROM (%s) AS t1' % sql
-    tags = parse_tags(tags)
+    tags = default_tags + parse_tags(tags)
     cur = pg.cursor()
     cur.execute(sql)
     for geom, label in cur:
@@ -201,7 +202,7 @@ def relief():
     way("SELECT * FROM lines WHERE type='0x100022' AND ST_NPoints(geom)=2",  "relief=hatch; deprecated:contour-width=major")
     #0x10001e	низ обрыва -- не делаем
     #0x100003	верх обрыва
-    way("SELECT * FROM lines WHERE type='0x100003'",  "relief=cliff")
+    way("SELECT geom, label FROM lines WHERE type='0x100003'",  "relief=cliff", 'height')
     #0x100025	овраг
     way("SELECT * FROM lines WHERE type='0x100025'",  "relief=ravine")
     #0x10000c	хребет -- используется локально для оврагов, корторые и так видны, не делаем
