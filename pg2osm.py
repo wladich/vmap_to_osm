@@ -62,7 +62,6 @@ def area(sql, tags, label_tag=None):
             osm.add_ways_relation(coords, area_tags)
     
 def poi(sql, tags, label_tag=None):
-    osm.drop_node_cache()
     sql = 'SELECT DISTINCT ST_ASGEOJSON(t1.geom, 6), t1.label FROM (%s) AS t1' % sql
     tags = default_tags + parse_tags(tags)
     cur = pg.cursor()
@@ -173,7 +172,7 @@ def points():
 
 def bridges():
     # 0x10001b	пешеходный тоннель -- превращаем в точечный
-    poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type='0x10001b'", 'poi=pedestrain_tunel')
+    poi("SELECT geom, label FROM points WHERE type='0x10001b'", 'poi=pedestrain_tunel')
     #0x100008	мост-1 (пешеходный)
     way("SELECT geom, label FROM lines WHERE type='0x100008'", 'bridge=pedestrain')
     #0x100009	мост-2 (автомобильный)
@@ -260,16 +259,17 @@ print 'Changeset %s' % changeset_id
 t = time.time()
 roads()
 bridges()
+points()
 osm.drop_node_cache()
 landcover()
+swamps()
 rivers()
+osm.drop_node_cache()
 borders()
 osm.drop_node_cache()
 relief()
-osm.drop_node_cache()
-points()
-osm.drop_node_cache()
-swamps()
+
+
 print time.time() - t
 
 

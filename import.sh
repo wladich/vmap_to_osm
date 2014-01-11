@@ -33,4 +33,5 @@ $pg -f "$basedir/proh.sql" > /dev/null
 $pg -f "$basedir/landcover.sql" > /dev/null
 $pg -f "$basedir/swamps.sql" > /dev/null
 $pg -f "$basedir/simplify_lines.sql" > /dev/null
+$pg -f "$basedir/points_on_lines.sql" > /dev/null
 python $basedir/pg2osm.py
