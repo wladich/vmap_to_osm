@@ -244,7 +244,7 @@ def landcover():
     #0x200016 лес
     #0x200015 остров леса
     #0x200052 поле
-    area("SELECT geom, label FROM polygons3 WHERE type in ('0x200016', '0x200015')", 'landcover=forest')
+    area("SELECT geom, '' as label FROM forests", 'landcover=forest')
     #0x200014 редколесье
     area("SELECT geom, label FROM polygons3 WHERE type = '0x200014'", 'landcover=sparse')
     #0x20004f свежая вырубка
