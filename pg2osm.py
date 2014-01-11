@@ -173,11 +173,11 @@ def points():
 def bridges():
     # 0x10001b	пешеходный тоннель -- превращаем в точечный
     poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type='0x10001b'", 'poi=pedestrain_tunel')
-    #0x100008	мост-1 (пешеходный) -- превращаем в точечный
-    poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type='0x100008'", 'poi=bridge')
-    #0x100009	мост-2 (автомобильный) -- превращаем в точечный
-    #0x10000e	мост-5 (на автомагистралях) -- превращаем в точечный
-    poi("SELECT ST_Line_Interpolate_Point(geom, 0.5) as geom, label FROM lines WHERE type in ('0x100009', '0x10000e')", 'poi=bridge; drive=yes')
+    #0x100008	мост-1 (пешеходный)
+    way("SELECT geom, label FROM lines WHERE type='0x100008'", 'bridge=pedestrain')
+    #0x100009	мост-2 (автомобильный)
+    #0x10000e	мост-5 (на автомагистралях)
+    way("SELECT geom, label FROM lines WHERE type in ('0x100009', '0x10000e')", 'bridge=automobile')
 
 def rivers():
     #0x100015 река-1
