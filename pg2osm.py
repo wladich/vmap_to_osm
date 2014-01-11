@@ -216,14 +216,11 @@ def borders():
     
 def swamps():
     #глубокое болото 0x20004c 
-    area("SELECT geom, label FROM polygons2 WHERE type = '0x20004c'", 'swamp=deep')
+    area("SELECT geom, label FROM swamps2 WHERE kind='deep'", 'swamp=deep')
     #болото 0x200051 
-    area("SELECT geom, label FROM polygons2 WHERE type = '0x200051'", 'swamp=swamp')
+    area("SELECT geom, label FROM swamps2 WHERE kind = 'swamp'", 'swamp=swamp')
     #болото 0x100024
-    area("""
-        with swamps1 as (select (st_dump(st_buffer(st_collect(geom), 0.0003, 'endcap=flat'))).geom as geom from lines where type='0x100024')
-        select st_simplifypreservetopology((st_dump(st_buffer(st_buffer(st_collect(geom), 0.00030), -0.00030))).geom, 0.0005) as geom, NULL as label from swamps1
-        """, 'swamp=swamp; converted_from_lines=yes')
+    area("SELECT geom, label FROM swamps2 WHERE kind = 'lines'", 'swamp=swamp; converted_from_lines=yes')
 
 
 def landcover():
