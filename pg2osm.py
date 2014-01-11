@@ -27,7 +27,7 @@ def way(sql, tags, label_tag=None):
     for geom, label in cur:
         geom = json.loads(geom)
         if geom['type'] != 'LineString':
-            raise Exception('Not a LineString for way')
+            raise Exception('Got "%s" for way' % geom['type'])
         coords = geom['coordinates']
         coords = [(float_to_coord(x), float_to_coord(y)) for x, y in coords]
         way_tags = tags[:]
@@ -46,7 +46,7 @@ def area(sql, tags, label_tag=None):
     for geom, label in cur:
         geom = json.loads(geom)
         if geom['type'] != 'Polygon':
-            raise Exception('Not a Polygon for area')
+            raise Exception('Got a "%s"for area' % geom['type'])
         coords = geom['coordinates']
         coords = [[(float_to_coord(x), float_to_coord(y)) for x, y in linestring] for linestring in coords]
         area_tags = tags[:]
@@ -69,7 +69,7 @@ def poi(sql, tags, label_tag=None):
     for geom, label in cur:
         geom = json.loads(geom)
         if geom['type'] != 'Point':
-            raise Exception('Not a Point for poi')
+            raise Exception('Got "%s" for poi' % geom['type'])
         coords = geom['coordinates']
         coords = (float_to_coord(coords[0]), float_to_coord(coords[1]))
         poi_tags = tags[:]
