@@ -21,7 +21,7 @@ def float_to_coord(x):
     return int(round(x * 10000000))
     
 def way(sql, tags, label_tag=None):
-    sql = 'SELECT ST_ASGEOJSON(ST_SimplifyPreserveTopology(t1.geom, 1e-6), 6), t1.label  FROM (%s) AS t1' % sql
+    sql = 'SELECT ST_ASGEOJSON(t1.geom, 6), t1.label  FROM (%s) AS t1' % sql
     tags = default_tags + parse_tags(tags)
     cur = pg.cursor()
     cur.execute(sql)
