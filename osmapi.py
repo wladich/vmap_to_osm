@@ -3,7 +3,7 @@
 import psycopg2
 import datetime
 
-now = datetime.datetime.now
+now = datetime.datetime.utcnow
 
 class OSMDB(object):
     def __init__(self, **kwargs):
