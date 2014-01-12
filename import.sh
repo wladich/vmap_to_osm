@@ -19,7 +19,7 @@ fi
 dbname=import_mappodm
 pg="psql --user postgres --host 127.0.0.1 --port 5432 -v ON_ERROR_STOP=1 "
 
-python ~/py_scripts/slazav_vmap/vmap_to_mif.py "$gitdir/vmap" "$mif_base"
+python vmap_to_mif.py "$gitdir/vmap" "$mif_base"
 $pg -c "DROP DATABASE IF EXISTS $dbname;"
 $pg -c "CREATE DATABASE $dbname WITH ENCODING='UTF8';"
 pg="$pg -d $dbname "
