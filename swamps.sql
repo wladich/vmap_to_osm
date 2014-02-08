@@ -15,7 +15,7 @@ SELECT st_simplifypreservetopology(
                         0.00030), 
                     -0.00030)
             )).geom, 0.0005)
-       AS geom, 'lines' AS kind FROM lines WHERE type='0x100024';
+       AS geom, NULL as label, 'lines' AS kind FROM lines WHERE type='0x100024';
 
 
 INSERT INTO swamps
