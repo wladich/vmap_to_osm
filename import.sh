@@ -2,7 +2,7 @@
 set -e
 set -x
 basedir="`dirname $0`"
-temp_dir="$basedir/_tmp"
+temp_dir="$basedir/tmp"
 mkdir -p "$temp_dir"
 gitdir=$temp_dir/map_podm
 mif_base=$temp_dir/map_podm

@@ -12,6 +12,34 @@ Columns 4
 DATA
 '''
 
+caps_names = {}
+for line in open('caps.txt').readlines():
+    quad, caps_name, name = line.split('\t')
+    caps_names[(quad, caps_name)] = name.strip()
+    
+towns_to_vilages = set()
+for line in open('towns_to_villages.txt').readlines():
+    quad, code, name = line.split('\t')
+    name = name.strip()
+    towns_to_vilages.add((quad, code, name))
+
+villages_to_towns = set()
+for line in open('villages_to_towns.txt').readlines():
+    quad, code, name = line.split('\t')
+    name = name.strip()
+    villages_to_towns.add((quad, code, name))
+
+def translate_obj(fname, obj):
+    quad = fname.stem
+    name = obj.get('label', '').strip()
+    code = hex(obj['code'])
+    if (quad, code, name) in villages_to_towns:
+        obj['code'] = 0x700
+    elif (quad, code, name) in towns_to_vilages:
+        obj['code'] = 0x900
+    if (quad, name) in caps_names:
+        obj['label'] = caps_names[(quad, name)]
+    
 def convert(filenames, out_name):
     mif = open(out_name + '.mif', 'w')
     mif.write(mif_header)
@@ -29,6 +57,7 @@ def convert(filenames, out_name):
                     kind = 'POINT'
                 if kind == 'POINT':
                     assert len(geom) == 1
+                    translate_obj(fname, obj)
                     mif.write('\nPOINT %s %s\n' % (geom[0]))
                 else:
                     new_geom = [geom[0]]
