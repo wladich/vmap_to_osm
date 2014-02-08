@@ -86,94 +86,89 @@ $$ LANGUAGE plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION divide_polygon(geom geometry) RETURNS SETOF geometry AS
-$BODY$
-DECLARE
-	width float;
-	height float;
-	x0 float;
-	y0 float;
-	x1 float;
-	y1 float;
-
-	q float;
-	blade geometry;
-	center float;
-	part record;
-	subpart record;
-	
-	
-BEGIN
-	IF ST_NPoints(geom) < 200 THEN
-		RETURN NEXT geom;
-	ELSE
-		x0 = ST_XMin(geom);
-		y0 = ST_YMin(geom);
-		x1 = ST_XMax(geom);
-		y1 = ST_YMax(geom);
-
-		q = cos(y0 / 180 * pi());
-		width = x1 - x0;
-		height = y1 - y0;
-		IF width * q > height THEN
-			center = x0 + width / 2;	
-			blade = ST_MakeLine(ST_MakePoint(center, y0-0.0001),ST_MakePoint(center, y1+0.0001));
-		ELSE
-			center = y0 + height / 2;	
-			blade = ST_MakeLine(ST_MakePoint(x0-0.0001, center), ST_MakePoint(x1+0.0001, center));
-		END IF;
-		blade = ST_SetSrid(blade, ST_Srid(geom));
-		FOR part in SELECT ST_Dump(ST_Split(geom, blade)) as dump LOOP
-			FOR subpart in SELECT divide_polygon((part.dump).geom) as geom LOOP
-				RETURN NEXT subpart.geom;
-			END LOOP;
-		END LOOP;
-	END IF;
-	
-END
-$BODY$
-LANGUAGE 'plpgsql';
-
 CREATE OR REPLACE FUNCTION limit_divide_polygon(geom geometry) RETURNS SETOF geometry AS
 $BODY$
-	class Geom(str):
-		_npoints = None
-		@property
-		def npoints(self):
-			if self._npoints is None:
-				self._npoints = plpy.execute("SELECT ST_NPoints('%s')" % self)[0].values()[0]
-			return self._npoints
-	
-	def intersects(geom1, geom2):
-		return plpy.execute("SELECT ST_Intersects('{0}', '{1}') AND ST_NPoints(ST_Intersection('{0}', '{1}'))>1".format(geom1, geom2))[0].values()[0]
-	
-	def get_first_neighbour(geom_, geoms):
-		result = []
-		for g in geoms:
-			if g != geom_ and intersects(geom_, g):
-				return g
-	def join_geoms(geom1, geom2):
-		return plpy.execute("SELECT ST_Buffer(ST_Collect('%s', '%s'), 0)" % (geom1, geom2))[0].values()[0]
 
-	def combine(geoms):
-		geoms = geoms[:]
-		combine_applied = True
-		while combine_applied:
-			combine_applied = False
-			geoms.sort(key=lambda x: x.npoints)
-			for g in geoms:
-				neighbour = get_first_neighbour(g, geoms)
-				if neighbour is not None and g.npoints + neighbour.npoints < 200:
-					geoms.remove(g)
-					geoms.remove(neighbour)
-					geoms.append(Geom(join_geoms(g, neighbour)))
-					combine_applied = True
-					break
-		return geoms
-			
-	
-	divided = [Geom(g.values()[0]) for g in plpy.execute("SELECT divide_polygon('%s')" % geom)]
-	return combine(divided)
+max_points = 200
+
+import shapely
+import shapely.wkb
+import shapely.prepared
+import binascii
+
+def geometry_type(geom):
+    if not hasattr(geom, '_geomtype'):
+        geom._geomtype = geom.type
+    return geom._geomtype
+    
+def dump(geom):
+    if geometry_type(geom).startswith('Multi'):
+        geoms = list(geom)
+        geoms = sum(map(dump, geoms), [])
+    else:
+        geoms = [geom]
+    return geoms
+
+def npoints(geom):
+    if not hasattr(geom, '_npoints'):
+        boundary = dump(geom.boundary)    
+        geom._npoints = sum([len(ls.coords) for ls in boundary])
+    return geom._npoints
+
+def divide(geom):
+    if npoints(geom) < max_points:
+        return [geom]
+    else:
+        x1, y1, x2, y2 = geom.bounds
+        w = x2 - x2
+        h = y2 - y1
+        if w > h:
+            xc = (x1 + x2)  / 2
+            blade1 = shapely.geometry.box(x1 - 0.0001, y1 - 0.0001, xc, y2 + 0.0001) 
+            blade2 = shapely.geometry.box(xc, y1-0.0001, x2+0.0001, y2+0.0001) 
+        else:
+            yc = (y1 + y2)  / 2
+            blade1 = shapely.geometry.box(x1-0.0001, y1-0.0001, x2+0.0001, yc) 
+            blade2 = shapely.geometry.box(x1-0.0001, yc, x2+0.0001, y2+0.0001) 
+        geom1 = geom.intersection(blade1)
+        geom2 = geom.intersection(blade2)
+        geoms = map(divide, dump(geom1) + dump(geom2))
+        geoms = sum(geoms, [])
+        return geoms
+            
+
+def get_first_neighbour(geom, geoms):
+    prep_geom = shapely.prepared.prep(geom)
+    for g in geoms:
+#        if g is not geom and g.intersects(geom):
+        if g is not geom and prep_geom.intersects(g):
+            return g
+
+
+def combine(geoms):
+    geoms = geoms[:]
+    combine_applied = True
+    while combine_applied:
+        combine_applied = False
+        geoms.sort(key=npoints)
+        for g in geoms:
+            neighbour = get_first_neighbour(g, geoms)
+            if neighbour is not None and npoints(g) + npoints(neighbour) < max_points:
+                geoms.remove(g)
+                geoms.remove(neighbour)
+                geoms.append(g.union(neighbour))
+                combine_applied = True
+                break
+    return geoms
+
+def _limit_divide_polygon(wkb):
+    wkb = binascii.unhexlify(wkb)
+    geom  = shapely.wkb.loads(wkb)
+    geoms = divide(geom)
+    return combine(geoms)
+
+return _limit_divide_polygon(geom)
+
 $BODY$
 LANGUAGE 'plpythonu';
 
