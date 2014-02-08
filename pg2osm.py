@@ -61,7 +61,7 @@ def area(sql, tags, label_tag=None):
         else:
             osm.add_ways_relation(coords, area_tags)
     
-def poi(sql, tags, label_tag=None):
+def poi(sql, tags, label_tag=None, use_cache=False):
     sql = 'SELECT DISTINCT ST_ASGEOJSON(t1.geom, 6), t1.label FROM (%s) AS t1' % sql
     tags = default_tags + parse_tags(tags)
     cur = pg.cursor()
@@ -78,7 +78,7 @@ def poi(sql, tags, label_tag=None):
                 label = label.strip()
             if label:
                 poi_tags.append((label_tag, label))
-        osm.add_poi(coords, poi_tags)
+        osm.add_poi(coords, poi_tags, use_cache)
 
     
 def roads():
@@ -145,7 +145,7 @@ def points():
     #0x2f08 "остановка автобуса"
     poi("SELECT geom, label FROM points WHERE type='0x2f08'", 'poi=bus_stop', 'name')
     #0x5905 "ж/д станция"
-    poi("SELECT geom, label FROM points WHERE type='0x5905'", 'poi=railway_station', 'name')
+    poi("SELECT geom, label FROM points WHERE type='0x5905'", 'poi=railway_station', 'name', use_cache=True)
     #0x6402 "дом"
     poi("SELECT geom, label FROM points WHERE type='0x6402'", 'poi=building', 'name')
     #0x6403 "кладбище"
@@ -172,7 +172,7 @@ def points():
 
 def bridges():
     # 0x10001b	пешеходный тоннель -- превращаем в точечный
-    poi("SELECT geom, label FROM points WHERE type='0x10001b'", 'poi=pedestrain_tunel')
+    poi("SELECT geom, label FROM points WHERE type='0x10001b'", 'poi=pedestrain_tunel', use_cache=True)
     #0x100008	мост-1 (пешеходный)
     way("SELECT geom, label FROM lines WHERE type='0x100008'", 'bridge=pedestrain')
     #0x100009	мост-2 (автомобильный)
@@ -182,9 +182,9 @@ def bridges():
 def rivers():
     #0x100015 река-1
     way("SELECT * FROM lines WHERE type='0x100015'",  "river=stream", 'name')
-    #0x100015 река-2
+    #0x100018 река-2
     way("SELECT * FROM lines WHERE type='0x100018'",  "river=kneedeep", 'name')
-    #0x100015 река-3
+    #0x10001f река-3
     way("SELECT * FROM lines WHERE type='0x10001f'",  "river=wide", 'name')
     #0x100026 пунктирный ручей
     way("SELECT * FROM lines WHERE type='0x100026'",  "river=drying", 'name')
@@ -257,9 +257,9 @@ osm.set_current_user('importer')
 changeset_id = osm.open_changeset([('created_by', 'https://github.com/wladich/vmap_to_osm'), ('comment', 'Import of slazav map')])
 print 'Changeset %s' % changeset_id
 t = time.time()
+points()
 roads()
 bridges()
-points()
 osm.drop_node_cache()
 landcover()
 swamps()

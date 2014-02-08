@@ -128,6 +128,19 @@ class OSMDB(object):
         return nodes_ids
         
         
+    def get_node_id(self, xy, use_cache=True):
+        if use_cache:
+            node_id = self.nodes.get(xy)
+        else:
+            node_id = None
+        if node_id is None:
+            node_id = self.add_nodes([xy])
+            assert len(node_id) == 1
+            node_id = node_id[0]
+            if use_cache:
+                self.nodes[xy] = node_id
+        return node_id
+        
     def get_nodes_ids(self, coords):
         new_nodes = set()
         for xy in coords:
@@ -194,10 +207,8 @@ class OSMDB(object):
         self.num_changes += 1
         return relation_id
         
-    def add_poi(self, coords, tags):
-        point_id = self.get_nodes_ids([coords])
-        assert len(point_id) == 1
-        point_id = point_id[0]
+    def add_poi(self, coords, tags, use_cache=True):
+        point_id = self.get_node_id(coords, use_cache)
         args = [(point_id, k, v) for (k, v) in tags]
         self.executemany('INSERT INTO current_node_tags (node_id, k, v) VALUES (%s, %s, %s)', args)
         self.executemany('INSERT INTO node_tags (node_id, k, v, version) VALUES (%s, %s, %s, 1)', args)
