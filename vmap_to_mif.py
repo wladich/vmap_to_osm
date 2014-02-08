@@ -29,6 +29,11 @@ for line in open('villages_to_towns.txt').readlines():
     name = name.strip()
     villages_to_towns.add((quad, code, name))
 
+exclude_cottage_labels = set()
+for line in open('dachi_exclude.txt').readlines():
+    name = line.strip()
+    exclude_cottage_labels.add(name)
+
 def translate_obj(fname, obj):
     quad = fname.stem
     name = obj.get('label', '').strip()
@@ -39,6 +44,9 @@ def translate_obj(fname, obj):
         obj['code'] = 0x900
     if (quad, name) in caps_names:
         obj['label'] = caps_names[(quad, name)]
+    if code == '0x20004e' and name in exclude_cottage_labels:
+        del obj['label']
+        
     
 def convert(filenames, out_name):
     mif = open(out_name + '.mif', 'w')
@@ -47,6 +55,7 @@ def convert(filenames, out_name):
     for fname in filenames:
         print fname
         for obj in vmap_iterator(open(fname)):
+            translate_obj(fname, obj)
             for geom in obj['geom']:
                 code = (obj['code'])
                 if code >= 0x200000:
@@ -57,7 +66,6 @@ def convert(filenames, out_name):
                     kind = 'POINT'
                 if kind == 'POINT':
                     assert len(geom) == 1
-                    translate_obj(fname, obj)
                     mif.write('\nPOINT %s %s\n' % (geom[0]))
                 else:
                     new_geom = [geom[0]]
